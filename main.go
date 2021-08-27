@@ -1,3 +1,57 @@
+// Package main Recipes API.
+//
+// the purpose of this application is to provide an application
+// that is using plain go code to define an API
+//
+// This should demonstrate all the possible comment annotations
+// that are available to turn go code into a fully compliant swagger 2.0 spec
+//
+// Terms Of Service:
+//
+// there are no TOS at this moment, use at your own risk we take no responsibility
+//
+//     Schemes: http
+//     Host: localhost
+//     BasePath: /v1
+//     Version: 0.0.1
+//     License: MIT http://opensource.org/licenses/MIT
+//     Contact: John Doe<john.doe@example.com> http://john.doe.com
+//
+//     Consumes:
+//     - application/json
+//     - application/xml
+//
+//     Produces:
+//     - application/json
+//     - application/xml
+//
+//     Security:
+//     - api_key:
+//
+//     SecurityDefinitions:
+//     api_key:
+//          type: apiKey
+//          name: KEY
+//          in: header
+//     oauth2:
+//         type: oauth2
+//         authorizationUrl: /oauth2/auth
+//         tokenUrl: /oauth2/token
+//         in: header
+//         scopes:
+//           bar: foo
+//         flow: accessCode
+//
+//     Extensions:
+//     x-meta-value: value
+//     x-meta-array:
+//       - value1
+//       - value2
+//     x-meta-array-obj:
+//       - name: obj
+//         value: field
+//
+// swagger:meta
 package main
 
 import (
@@ -5,6 +59,7 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +86,7 @@ func main() {
 	router.GET("/recipes", ListRecipeHandler)
 	router.PUT("/recipes/:id", UpdateRecipeHandler)
 	router.DELETE("/recipes/:id", DeleteRecipeHandler)
+	router.GET("/recipes/search", SearchRecipesHandler)
 
 	router.Run()
 
@@ -83,12 +139,38 @@ func NewRecipeHandler(c *gin.Context) {
 
 }
 
+// swagger:operation GET /recipes recipes listRecipes
+// Returns list of recipes
+// ---
+// produces:
+// - application/json
+// responses:
+//     '200':
+//         description: Successful operation
 func ListRecipeHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, recipes)
 
 }
 
+// swagger:operation PUT /recipes/{id} recipes updateRecipe
+// Update an existing recipe
+// ---
+// parameters:
+// - name: id
+//   in: path
+//   description: ID of the recipe
+//   required: true
+//   type: string
+// produces:
+// - application/json
+// responses:
+//     '200':
+//         description: Successful operation
+//     '400':
+//         description: Invalid input
+//     '404':
+//         description: Invalid recipe ID
 func UpdateRecipeHandler(c *gin.Context) {
 
 	id := c.Param("id")
@@ -145,5 +227,38 @@ func DeleteRecipeHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recipe has been deleted"})
+
+}
+func SearchRecipesHandler(c *gin.Context) {
+
+	tag := c.Query("tag")
+
+	listOfRecipes := make([]Recipe, 0)
+
+	for i := 0; i < len(recipes); i++ {
+
+		found := false
+
+		for _, t := range recipes[i].Tags {
+
+			if strings.EqualFold(t, tag) {
+
+				found = true
+
+			}
+
+		}
+
+		if found {
+
+			listOfRecipes = append(listOfRecipes,
+
+				recipes[i])
+
+		}
+
+	}
+
+	c.JSON(http.StatusOK, listOfRecipes)
 
 }
