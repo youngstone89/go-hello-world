@@ -2,10 +2,18 @@ package main
 
 import (
 	"encoding/xml"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/xid"
 )
+
+var recipes []Recipe
+
+func init() {
+	recipes = make([]Recipe, 0)
+}
 
 func main() {
 
@@ -13,7 +21,9 @@ func main() {
 
 	router.GET("/:name", IndexHandler)
 
-	router.Run(":5000")
+	router.POST("/recipes", NewRecipeHandler)
+
+	router.Run()
 
 }
 func IndexHandler(c *gin.Context) {
@@ -34,6 +44,8 @@ type Person struct {
 }
 
 type Recipe struct {
+	ID string `json:"id"`
+
 	Name string `json:"name"`
 
 	Tags []string `json:"tags"`
@@ -43,4 +55,21 @@ type Recipe struct {
 	Instructions []string `json:"instructions"`
 
 	PublishedAt time.Time `json:"publishedAt"`
+}
+
+func NewRecipeHandler(c *gin.Context) {
+
+	var recipe Recipe
+
+	if err := c.ShouldBindJSON(&recipe); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+
+		return
+	}
+	recipe.ID = xid.New().String()
+	recipe.PublishedAt = time.Now()
+	recipes = append(recipes, recipe)
+	c.JSON(http.StatusOK, recipe)
+
 }
