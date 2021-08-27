@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,4 +31,16 @@ type Person struct {
 	XMLName   xml.Name `xml:person`
 	FirstName string   `xml:firstName,attr`
 	LastName  string   `xml:lastName,attr`
+}
+
+type Recipe struct {
+	Name string `json:"name"`
+
+	Tags []string `json:"tags"`
+
+	Ingredients []string `json:"ingredients"`
+
+	Instructions []string `json:"instructions"`
+
+	PublishedAt time.Time `json:"publishedAt"`
 }
